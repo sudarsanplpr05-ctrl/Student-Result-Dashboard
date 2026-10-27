@@ -1,0 +1,356 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Result Dashboard</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            margin: 0;
+            padding: 20px;
+            color: #1e293b;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1d4ed8;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        input {
+            flex: 1;
+            min-width: 0;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 12px 18px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px #00000010;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 750px;
+        }
+
+        th, td {
+            padding: 13px;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        th {
+            background: #1e40af;
+            color: white;
+        }
+
+        tbody tr:hover {
+            background: #eff6ff;
+        }
+
+        .summary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .card {
+            flex: 1 1 180px;
+            background: white;
+            padding: 18px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px #00000010;
+            text-align: center;
+        }
+
+        .card h3 {
+            color: #2563eb;
+            margin-top: 0;
+        }
+
+        #message {
+            margin: 15px 0;
+            font-weight: bold;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 12px;
+            }
+
+            .search-box {
+                flex-direction: column;
+            }
+
+            .search-box button {
+                width: 100%;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Student Result Dashboard</h1>
+        <p>Search student records by name or roll number.</p>
+
+        <div class="search-box">
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="Enter student name or roll number"
+                aria-label="Search student records"
+            >
+            <button type="button" id="searchBtn">Search</button>
+            <button type="button" id="resetBtn">Show All</button>
+        </div>
+
+        <div class="summary">
+            <div class="card">
+                <h3>Total Students</h3>
+                <p id="studentCount">0</p>
+            </div>
+
+            <div class="card">
+                <h3>Class Average</h3>
+                <p id="classAverage">0%</p>
+            </div>
+
+            <div class="card">
+                <h3>Students Passed</h3>
+                <p id="passedCount">0</p>
+            </div>
+        </div>
+
+        <p id="message" aria-live="polite"></p>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Roll No.</th>
+                        <th>Name</th>
+                        <th>Marks</th>
+                        <th>Total</th>
+                        <th>Average</th>
+                        <th>Percentage</th>
+                        <th>Grade</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="studentTable"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Array of student objects.
+        // Each object stores details and an array of subject marks.
+        const students = [
+            {
+                rollNo: "101",
+                name: "Arun",
+                marks: [85, 90, 78, 88, 92]
+            },
+            {
+                rollNo: "102",
+                name: "Priya",
+                marks: [95, 92, 96, 89, 94]
+            },
+            {
+                rollNo: "103",
+                name: "Rahul",
+                marks: [65, 70, 58, 72, 68]
+            },
+            {
+                rollNo: "104",
+                name: "Divya",
+                marks: [45, 55, 40, 60, 50]
+            },
+            {
+                rollNo: "105",
+                name: "Karthik",
+                marks: [30, 35, 25, 40, 32]
+            }
+        ];
+
+        const tableBody = document.getElementById("studentTable");
+        const searchInput = document.getElementById("searchInput");
+        const message = document.getElementById("message");
+
+        // Calculate student results.
+        function calculateResult(student) {
+            const total = student.marks.reduce(
+                (sum, mark) => sum + mark, 0
+            );
+
+            const average = total / student.marks.length;
+            const percentage = (total / 500) * 100;
+
+            // Each subject must have at least 35 marks to pass.
+            const passed = student.marks.every(mark => mark >= 35);
+
+            let grade;
+
+            if (!passed) {
+                grade = "F";
+            } else if (percentage >= 90) {
+                grade = "A+";
+            } else if (percentage >= 80) {
+                grade = "A";
+            } else if (percentage >= 70) {
+                grade = "B";
+            } else if (percentage >= 60) {
+                grade = "C";
+            } else if (percentage >= 50) {
+                grade = "D";
+            } else {
+                grade = "E";
+            }
+
+            return {
+                total,
+                average,
+                percentage,
+                grade,
+                passed
+            };
+        }
+
+        // Display student records dynamically.
+        function displayStudents(records) {
+            tableBody.replaceChildren();
+
+            if (records.length === 0) {
+                message.textContent = "No student records found.";
+                return;
+            }
+
+            message.textContent = `Showing ${records.length} student(s).`;
+
+            records.forEach(student => {
+                const result = calculateResult(student);
+                const row = document.createElement("tr");
+
+                const values = [
+                    student.rollNo,
+                    student.name,
+                    student.marks.join(", "),
+                    `${result.total} / 500`,
+                    result.average.toFixed(2),
+                    result.percentage.toFixed(2) + "%",
+                    result.grade,
+                    result.passed ? "Pass" : "Fail"
+                ];
+
+                values.forEach(value => {
+                    const cell = document.createElement("td");
+                    cell.textContent = value;
+                    row.appendChild(cell);
+                });
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Update dashboard summary.
+        function updateSummary(records) {
+            const count = records.length;
+
+            const averagePercentage = count === 0
+                ? 0
+                : records.reduce(
+                    (sum, student) =>
+                        sum + calculateResult(student).percentage,
+                    0
+                ) / count;
+
+            const passed = records.filter(
+                student => calculateResult(student).passed
+            ).length;
+
+            document.getElementById("studentCount").textContent = count;
+            document.getElementById("classAverage").textContent =
+                averagePercentage.toFixed(2) + "%";
+            document.getElementById("passedCount").textContent = passed;
+        }
+
+        // Search by student name or roll number.
+        function searchStudents() {
+            const query = searchInput.value.trim().toLowerCase();
+
+            const filteredStudents = students.filter(student =>
+                student.name.toLowerCase().includes(query) ||
+                student.rollNo.toLowerCase().includes(query)
+            );
+
+            displayStudents(filteredStudents);
+            updateSummary(filteredStudents);
+        }
+
+        document.getElementById("searchBtn").addEventListener(
+            "click", searchStudents
+        );
+
+        searchInput.addEventListener("keydown", function(event) {
+            if (event.key === "Enter") {
+                searchStudents();
+            }
+        });
+
+        document.getElementById("resetBtn").addEventListener(
+            "click", function() {
+                searchInput.value = "";
+                displayStudents(students);
+                updateSummary(students);
+            }
+        );
+
+        // Display all records when the page loads.
+        displayStudents(students);
+        updateSummary(students);
+    </script>
+</body>
+</html>
